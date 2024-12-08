@@ -1,0 +1,66 @@
+name: "Update Version"
+
+on:
+  push:
+    branches: ["main"]
+  workflow_dispatch:
+    # manual workflow 
+env:
+  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+jobs:
+  versioning:
+    name: Versioning
+    environment: versioning
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: write
+      security-events: write
+
+    steps:
+      - uses: actions/create-github-app-token@v1
+        id: app-token
+        with:
+          app-id: ${{ secrets.VERSION_BUMPER_APPID }}
+          private-key: ${{ secrets.VERSION_BUMPER_SECRET }}
+      
+      - name: Checkout using app token
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref }}
+          fetch-depth: 0
+          #token: ${{ secrets.PAT_TOKEN }} 
+          token: ${{ steps.app-token.outputs.token }}         
+
+      - name: setup .net core
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+
+      - name: install gitversion
+        uses: gittools/actions/gitversion/setup@v0
+        with:
+          versionspec: "5.x"
+
+      - name: Use GitVersion
+        id: gitversion
+        uses: gittools/actions/gitversion/execute@v0
+
+      - name: Create version file
+        run: |
+          echo "Version: ${{ steps.gitversion.outputs.majorMinorPatch }}" > version.txt
+      
+      - name: Commit
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add version.txt
+          git commit -m "Update version [skip ci]"
+      
+      - name: Push changes
+        uses: ad-m/github-push-action@master
+        with:
+          #github_token: ${{ secrets.PAT_TOKEN }}
+          github_token: ${{ steps.app-token.outputs.token }}
+          repository: henne49/dbus-opendtu
+          force_with_lease: true

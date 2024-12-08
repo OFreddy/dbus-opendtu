@@ -1,39 +1,41 @@
-
-
 # dbus-opendtu
 
 > **Attention:**
-> ⚠️For any problems with OpenDTU prior v4.4.3 version, please update to the latest code where most Issues are fixed. OpenDTU changed the API. The same applies to AhoyDTU.⚠️
+> ⚠️Please Update your Installation to latest stable version log file handling⚠️
 
 ## Table of contents
 
-* [Introduction](#introduction)
-* [Installation](#installation)
-  * [Get the code](#get-the-code)
-  * [Configuration](#configuration)
-    * [Default options](#default-options)
-    * [Inverter options](#inverter-options)
-    * [Template options](#template-options)
-  * [Service names](#service-names)
-  * [Videos how to install](#videos-how-to-install)
-  * [Use Cases](#use-cases)
-    * [Use Case 1: Using a Pv Inverter](#use-case-1-use-a-pv-inverter)
-    * [Use Case 2: Using a (Battery) Inverter](#use-case-2-use-a-battery-inverter)
-* [Usage](#usage)
-  * [Check if script is running](#check-if-script-is-running)
-  * [How to debug](#how-to-debug)
-  * [How to install](#how-to-install)
-  * [How to restart](#how-to-restart)
-  * [How to uninstall](#how-to-uninstall)
-* [How does it work](#how-does-it-work)
-  * [Pictures](#pictures)
-* [Tested Devices](#tested-devices)
-* [Troubleshooting](#troubleshooting)
-  * [Security settings in OpenDTU](#security-settings-in-opendtu)
-* [Inspiration](#inspiration)
-* [Furher reading](#further-reading)
-  * [used documentation](#used-documentation)
-  * [Discussions on the web](#discussions-on-the-web)
+- [dbus-opendtu](#dbus-opendtu)
+  - [Table of contents](#table-of-contents)
+  - [Introduction](#introduction)
+  - [Installation](#installation)
+    - [Get the code](#get-the-code)
+    - [Update the code](#update-the-code)
+    - [Configuration](#configuration)
+      - [Default options](#default-options)
+      - [Inverter options](#inverter-options)
+      - [Template options](#template-options)
+    - [Service names](#service-names)
+    - [Videos how to install](#videos-how-to-install)
+    - [Use Cases](#use-cases)
+      - [**Use case 1: Use a PV inverter**](#use-case-1-use-a-pv-inverter)
+      - [**Use case 2: Use a battery inverter**](#use-case-2-use-a-battery-inverter)
+  - [Usage](#usage)
+    - [Check if the script is running](#check-if-the-script-is-running)
+    - [How to debug](#how-to-debug)
+    - [How to install](#how-to-install)
+    - [How to restart](#how-to-restart)
+    - [How to uninstall](#how-to-uninstall)
+  - [How does it work](#how-does-it-work)
+    - [Pictures](#pictures)
+  - [Tested Devices](#tested-devices)
+  - [Frequently asked Questions](#frequently-asked-questions)
+  - [Troubleshooting](#troubleshooting)
+    - [Security settings in OpenDTU](#security-settings-in-opendtu)
+  - [Inspiration](#inspiration)
+  - [Further reading](#further-reading)
+    - [used Documentation](#used-documentation)
+    - [Discussions on the web](#discussions-on-the-web)
 
 ---
 
@@ -61,12 +63,13 @@ The following commands should do everything for you:
 wget -O main.zip https://github.com/henne49/dbus-opendtu/archive/refs/heads/main.zip
 unzip main.zip "dbus-opendtu-main/*" -d /data
 mv /data/dbus-opendtu-main /data/dbus-opendtu
-chmod a+x /data/dbus-opendtu/install.sh
+chmod a+x /data/dbus-opendtu/*.sh
 ```
 
 ⚠️**Edit the following configuration file according to your needs before proceeding**⚠️ see [Configuration](#configuration) for details.
 
 ```bash
+cp /data/dbus-opendtu/config.example /data/dbus-opendtu/config.ini
 nano /data/dbus-opendtu/config.ini
 ```
 
@@ -74,10 +77,32 @@ Tha last step is to install the service and remove the downloaded files:
 
 ```bash
 /data/dbus-opendtu/install.sh
+/data/dbus-opendtu/restart.sh
 rm main.zip
 ```
 
 Check configuration after that - because the service is already installed and running. In case of wrong connection data (host, username, pwd) you will spam the log-file! Also, check to **set a** proper (minimal) **log level**
+
+### Update the code
+Just grap a copy of the main branch and copy the content to `/data/` e.g. `/data/dbus-opendtu`. The process will preserve your existing config ini. 
+After that call the `install.sh script.
+
+```bash
+cp /data/dbus-opendtu/config.ini /data/dbus-opendtu/config.backup
+wget -O main.zip https://github.com/henne49/dbus-opendtu/archive/refs/heads/main.zip
+unzip main.zip "dbus-opendtu-main/*" -d /data
+cp -R /data/dbus-opendtu-main/* /data/dbus-opendtu
+rm -rf /data/dbus-opendtu-main/
+chmod a+x /data/dbus-opendtu/*.sh
+/data/dbus-opendtu/uninstall.sh
+/data/dbus-opendtu/install.sh
+/data/dbus-opendtu/restart.sh
+rm main.zip
+```
+
+The last 4 step is to install the service and remove the downloaded files:
+
+If the script does not work or start, please check the config.example file and update your config.ini. Or reconfigure the config.example with your configuration and save as config.ini. The process also creates a copy of your old config.ini called config.backup.
 
 ### Configuration
 
@@ -87,9 +112,9 @@ Within the project there is a file `/data/dbus-opendtu/config.ini`. Most importa
 
 | Config value        | Explanation   |
 |-------------------- | ------------- |
-| SignOfLifeLog  | Time in minutes how often a status is added to the log-file `current.log` with log-level INFO |
+| SignOfLifeLog  | Time in minutes how often a status is added to the log-file `current` with log-level INFO |
 | NumberOfTemplates | Number ob Template Inverter to query |
-| DTU | Which DTU to be used ahoy, opendtu or template REST devices Valid options: opendtu, ahoy, template |
+| DTU | Which DTU to be used ahoy, opendtu or template REST devices Valid options: opendtu, ahoy, template. template is template only, ahoy and opendtu can use a dtu and templates together.|
 | NumberOfInvertersToQuery | Number of Inverters to query. Set a value larger than "0" when not all inverters should be considered. *1 |
 | useYieldDay | send YieldDay instead of YieldTotal. Set this to 1 to prevent VRM from adding the total value to the history on one day. E.g. if you don't start using the inverter at 0. |
 | ESP8266PollingIntervall |  For ESP8266 reduce polling intervall to reduce load, default 10000ms|
@@ -111,10 +136,11 @@ This applies to each `INVERTER[X]` section. X is the number of Inverter starting
 |-------------------- | ------------- |
 | Phase | which Phase L1, L2, L3 to show; use 3P for three-phase-inverters *1 |
 | DeviceInstance | Unique ID identifying the OpenDTU in Venus OS|
-| AcPosition | Position shown in Remote Console (0=AC input 1; 1=AC output; 2=AC input 2) |
+| AcPosition | Position shown in Remote Console (0=AC input 1; 1=AC output; 2=AC input 2) *2 |
 | Servicename | e.g. com.victronenergy.pvinverter see [Service names](#service-names) |
 
 *1: Use 3P to split power equally over three phases (use this for Hoymiles three-phase micro-inverters as they report total power only, not seperated by phase).
+*2 Important for proper visualization in Venus OS / VRM
 
 #### Template options
 
@@ -129,17 +155,17 @@ This applies to each `TEMPLATE[X]` section. X is the number of Template starting
 | CUST_SN | Serialnumber to register device in VenusOS|
 | CUST_API_PATH | Location of REST API Path for JSON to be used |
 | CUST_POLLING | Polling interval in ms for Device |
-| CUST_Total | Path in JSON where to find total Energy |
+| CUST_Total | Path in JSON *4 where to find total Energy |
 | CUST_Total_Mult | Multiplier to convert W per minute for example in kWh|
 | CUST_Total_Default | [optional] Default value if no value is found in JSON |
-| CUST_Power | Path in JSON where to find actual Power |
+| CUST_Power | Path in JSON *4 where to find actual Power |
 | CUST_Power_Mult | Multiplier to convert W in negative or positive |
 | CUST_Power_Default | [optional] Default value if no value is found in JSON |
-| CUST_Voltage | Path in JSON where to find actual Voltage |
+| CUST_Voltage | Path in JSON *4 where to find actual Voltage |
 | CUST_Voltage_Default | [optional] Default value if no value is found in JSON |
-| CUST_Current | Path in JSON where to find actual Current |
+| CUST_Current | Path in JSON *4 where to find actual Current |
 | CUST_Current_Default | [optional] Default value if no value is found in JSON |
-| CUST_DCVoltage | Path in JSON where to find actual DC Voltage (e.g. Batterie voltage) *2|
+| CUST_DCVoltage | Path in JSON *4 where to find actual DC Voltage (e.g. Batterie voltage) *2|
 | CUST_DCVoltage_Default | [optional] Default value if no value is found in JSON |
 | Phase | which Phase L1, L2, L3 to show; use 3P for three-phase-inverters *3 |
 | DeviceInstance | Unique ID identifying the OpenDTU in Venus OS|
@@ -147,10 +173,11 @@ This applies to each `TEMPLATE[X]` section. X is the number of Template starting
 | Name | Name to be shown in VenusOS, use a descriptive name |
 | Servicename | e.g. com.victronenergy.pvinverter see [Service names](#service-names) |
 
-Example for JSON PATH: use keywords separated by /
-
 *2: is only used if Servicename is com.victronenergy.inverter
+
 *3: Use 3P to split power equally over three phases (use this for Hoymiles three-phase micro-inverters as they report total power only, not seperated by phase).
+
+*4: Path in JSON: use keywords and array index numbers separated by `/`. Example (compare [tasmota_shelly_2pm.json](docs/tasmota_shelly_2pm.json)): `StatusSNS/ENERGY/Current/0` fetches dictionary (map) entry `StatusSNS` containting an entry `ENERGY` containing an entry `Current` containing an array where the first element (index 0) is taken.
 
 ### Service names
 
@@ -193,7 +220,7 @@ A Basic configuration could look like this:
 DTU=ahoy
 
 #Possible Options for Log Level: CRITICAL, ERROR, WARNING, INFO, DEBUG, NOTSET
-#To keep current.log small use ERROR
+#To keep current log small use ERROR or CRITICAL
 Logging=ERROR
 
 #IP of Device to query <-- THIS IS THE IP OF THE DTU
@@ -230,7 +257,7 @@ A Basic configuration could look like this:
 DTU=ahoy
 
 #Possible Options for Log Level: CRITICAL, ERROR, WARNING, INFO, DEBUG, NOTSET
-#To keep current.log small use ERROR
+#To keep current log small use ERROR or CRITICAL
 Logging=ERROR
 
 #IP of Device to query <-- THIS IS THE IP OF THE DTU
@@ -258,7 +285,7 @@ These are some useful commands which help to use the script or to debug.
 
 ### Check if the script is running
 
-`svstat /service/dbus-opendtu` show if the service (our script) is running. If the number of seconds shown is low, it is probably restarting and you should look into `/data/dbus-opendtu/current.log`.
+`svstat /service/dbus-opendtu` show if the service (our script) is running. If the number of seconds shown is low, it is probably restarting and you should look into `/var/log/dbus-opendtu/current`.
 
 ### How to debug
 
@@ -275,8 +302,6 @@ This also activates the service, so you don't need to run `svcadm enable /servic
 ### How to restart
 
 `/data/dbus-opendtu/restart.sh` restarts the service - e.g. after a config.ini change.
-
-This also clears the logfile, so you can see the latest output in `/data/dbus-opendtu/current.log`.
 
 ### How to uninstall
 
@@ -329,12 +354,25 @@ All [configuration](#configuration) is done via config.ini. Examples are comment
 
 ---
 
+## Frequently asked questions
+
+Frequently asked questions:
+* **Can I use multiple instances?** - YES, but limit the usage to a minimal level and check the stability of your system for free space on your device and load. Also remeber, that templates can be queried together with a single dtu, no need for another instance. 
+* **Do I need multiple instances to query a DTU and templates?** - NO, templates can be queried together with a single dtu, no need for another instance. But limit the usage of templates and check the stability of your system.
+
+---
+
 ## Troubleshooting
 
 Please open a new issue on github, only here we can work on your problem in a structured way: <https://github.com/henne49/dbus-opendtu/issues/new/choose>
 
-⚠️ **Change the Logging Parameter under DEFAULT in /data/dbus-opendtu/config.ini to Logging = DEBUG, please revert, once debugging and troubleshooting is complete. Rerun the script and share the current.log file**.
+⚠️ **Change the Logging Parameter under DEFAULT in /data/dbus-opendtu/config.ini to Logging = DEBUG, please revert back to ERROR or CRITICAL, once debugging and troubleshooting is complete.**
 
+Rerun the script and share the log file current.log use the following command to generate human readable timestamps. We require this to start any troubleshooting.
+
+```
+cat /var/log/dbus-opendtu/current | tai64nlocal > current.log
+```
 Please provide the config.ini and JSON file and upload to the github issues, you can download the JSON file using your browser or using a commandline like tool like curl
 
 | Type of DTU | URL |

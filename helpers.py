@@ -31,7 +31,7 @@ def get_default_config(config, name, defaultvalue):
     return defaultvalue
 
 
-def get_value_by_path(meter_data, path):
+def get_value_by_path(meter_data: dict, path):
     '''Try to extract 'path' from nested array 'meter_data' (derived from json document) and return the found value'''
     value = meter_data
     for path_entry in path:
@@ -45,8 +45,8 @@ def get_value_by_path(meter_data, path):
     return value
 
 
-def convert_to_expected_type(value: str, expected_type: [str, int, float, bool],
-                             default: [None, str, int, float, bool]) -> [None, str, int, float, bool]:
+def convert_to_expected_type(value: str, expected_type: [str, int, float, bool],  # type: ignore
+                             default: [None, str, int, float, bool]) -> [None, str, int, float, bool]:  # type: ignore
     ''' Try to convert value to expected_type, otherwise return default'''
     try:
         conversion_functions = {
